@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}관리자 대시보드{% endblock %}
+{% block content %}
+<h2>🛠 관리자 대시보드</h2>
+
+<hr>
+<h3>👥 사용자 목록</h3>
+<table border="1">
+    <tr>
+        <th>아이디</th>
+        <th>유저명</th>
+        <th>차단 여부</th>
+        <th>관리</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ '✅ 차단됨' if user.is_blocked else '❎ 정상' }}</td>
+        <td>
+            {% if not user.is_blocked and not user.is_admin %}
+            <form method="POST" action="{{ url_for('admin_block_user', user_id=user.id) }}">
+                <button type="submit">차단</button>
+            </form>
+            {% else %}
+            관리자 계정
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+<h3>🛒 등록된 상품</h3>
+<table border="1">
+    <tr>
+        <th>상품명</th>
+        <th>설명</th>
+        <th>가격</th>
+        <th>판매자 ID</th>
+    </tr>
+    {% for product in products %}
+    <tr>
+        <td>{{ product.title }}</td>
+        <td>{{ product.description }}</td>
+        <td>{{ product.price }}</td>
+        <td>{{ product.seller_id }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<hr>
+<h3>🚨 신고 내역</h3>
+<table border="1">
+    <tr>
+        <th>신고자 ID</th>
+        <th>대상 ID</th>
+        <th>사유</th>
+        <th>조치</th>
+    </tr>
+    {% for report in reports %}
+    <tr>
+        <td>{{ report.reporter_id }}</td>
+        <td>{{ report.target_id }}</td>
+        <td>{{ report.reason }}</td>
+        <td>
+            <form method="POST" action="{{ url_for('admin_block_user', user_id=report.target_id) }}"
+                style="display:inline;">
+                <button type="submit">차단</button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_user_products', user_id=report.target_id) }}"
+                style="display:inline;">
+                <button type="submit">상품 삭제</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

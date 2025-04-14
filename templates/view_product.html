@@ -5,4 +5,13 @@
 <p>{{ product.description }}</p>
 <p>가격: {{ product.price }}</p>
 <p>판매자: {{ seller.username if seller else '알 수 없음' }}</p>
+{% if seller and seller.id != user.id %}
+<hr>
+<h3>판매자에게 포인트 송금</h3>
+<form method="POST" action="{{ url_for('direct_transfer', seller_id=seller.id, product_id=product.id) }}">
+    <label>송금 금액:</label>
+    <input type="number" name="amount" min="1" required>
+    <button type="submit">송금하기</button>
+</form>
+{% endif %}
 {% endblock %}

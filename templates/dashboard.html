@@ -8,6 +8,7 @@
 <hr>
 <!-- 검색 입력창을 넣는다!-->
 <form method="GET" action="{{ url_for('search') }}">
+  {{ csrf_token()}}
   <input type="text" name="q" placeholder="찾는 상품 검색">
   <button type="submit">검색</button>
 </form>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ code }} 오류</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            text-align: center;
+            padding: 80px;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #cc0000;
+        }
+
+        p {
+            font-size: 20px;
+        }
+
+        a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>에러 {{ code }}</h1>
+    <p>{{ message }}</p>
+    <p><a href="{{ url_for('index') }}">홈으로 돌아가기</a></p>
+</body>
+
+</html>

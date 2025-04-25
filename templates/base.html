@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}My Market{% endblock %}</title>
@@ -14,17 +15,20 @@
       padding: 0;
       color: #333;
     }
+
     nav {
       background-color: #fff;
       padding: 20px;
       border-bottom: 1px solid #e0e0e0;
     }
+
     nav a {
       text-decoration: none;
       color: #555;
       margin-right: 15px;
       font-weight: 500;
     }
+
     .container {
       max-width: 800px;
       margin: 40px auto;
@@ -33,11 +37,17 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       border-radius: 8px;
     }
-    h1, h2, h3 {
+
+    h1,
+    h2,
+    h3 {
       font-weight: 600;
       margin-bottom: 20px;
     }
-    input, textarea, button {
+
+    input,
+    textarea,
+    button {
       width: 100%;
       padding: 10px;
       margin-bottom: 20px;
@@ -45,6 +55,7 @@
       border-radius: 4px;
       font-size: 16px;
     }
+
     button {
       background-color: #007AFF;
       color: #fff;
@@ -52,17 +63,21 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
+
     button:hover {
       background-color: #005BB5;
     }
+
     ul {
       list-style: none;
       padding: 0;
     }
+
     li {
       padding: 10px;
       border-bottom: 1px solid #e0e0e0;
     }
+
     .flash {
       background-color: #FFECB3;
       padding: 10px;
@@ -70,10 +85,12 @@
       border-radius: 4px;
       margin-bottom: 20px;
     }
+
     /* 채팅 영역 스타일 */
     #chat {
       margin-top: 40px;
     }
+
     #messages {
       height: 200px;
       overflow-y: auto;
@@ -85,29 +102,31 @@
     }
   </style>
 </head>
+
 <body>
   <nav>
     {% if session.get('user_id') %}
-      <a href="{{ url_for('dashboard') }}">대시보드</a>
-      <a href="{{ url_for('profile') }}">프로필</a>
-      <a href="{{ url_for('report') }}">신고하기</a>
-      <a href="{{ url_for('logout') }}">로그아웃</a>
+    <a href="{{ url_for('dashboard') }}">대시보드</a>
+    <a href="{{ url_for('profile') }}">프로필</a>
+    <a href="{{ url_for('report') }}">신고하기</a>
+    <a href="{{ url_for('logout') }}">로그아웃</a>
     {% else %}
-      <a href="{{ url_for('login') }}">로그인</a>
-      <a href="{{ url_for('register') }}">회원가입</a>
+    <a href="{{ url_for('login') }}">로그인</a>
+    <a href="{{ url_for('register') }}">회원가입</a>
     {% endif %}
   </nav>
   <div class="container">
     {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul>
-          {% for message in messages %}
-            <li class="flash">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+    {% if messages %}
+    <ul>
+      {% for message in messages %}
+      <li class="flash">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
   </div>
 </body>
+
 </html>

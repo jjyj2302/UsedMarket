@@ -3,6 +3,26 @@ import uuid         #사용자간 중복없는 진짜 고유 식별자를 만들
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from flask_socketio import SocketIO, send
 from functools import wraps   #일반 사용자와 admin 계정 보안을 위한 데코레이터
+import re   #정규식 모듈 
+import html  #XSS 공격 방지를 위한 모듈 HTML 이스케이프
+from flask_wtf import CSRFProtect #CSRF 공격 방지를 위한 모듈
+import bcrypt #비밀 번호 암호화를 위한 모듈
+from flask import abort #오류 발생 처리를를 위한 모듈
+from datetime import timedelta, datetime  #세션 종료 처리와 시간 처리를 위한 모듈
+
+# 보안을 고려한 요소 모음
+def is_valid_username(username):
+    # 영문, 숫자, 언더스코어만 허용한다. 
+    return re.match(r'^[a-zA-Z0-9_]{3,20}$', username)
+
+def is_valid_password(password):
+    # 최소 8자 이상, 영문자 + 숫자 + 특수문자 포함
+    return (
+        len(password) >= 8 and
+        re.search(r'[A-Za-z]', password) and
+        re.search(r'\d', password) and
+        re.search(r'[!@#$%^&*(),.?":{}|<>]', password)
+    )
 
 def admin_required(f):     #관리자 권한 확인 데코레이터터
     @wraps(f)
@@ -32,10 +52,46 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# 오류 메시지 출력 함수
+# 404 Not Found 오류 처리리
+@app.errorhandler(404)
+def not_found_error(e):
+    return render_template('error.html', message="페이지를 찾을 수 없습니다."), 404
+
+# 500 Internal Server Error 오류 처리
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template('error.html', message="서버에 오류가 발생했습니다. 관리자에게 문의하세요."), 500
+
+# 예상치 못한 모든 예외 처리 실시
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    print(f"[예외 발생] {e}") # 로그 출력력
+    return render_template('error.html', code=500, message="알 수 없는 오류가 발생했습니다."), 500
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 app.config['SECRET_KEY'] = 'secret!'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15) #세션 유지시간 설정 (15분)
 DATABASE = 'market.db'
 socketio = SocketIO(app)
+
+@app.before_request
+def session_timeout_check():
+    session.permanent = True # session.lifetime 설정을 위해 필요
+    now = datetime.utcnow()
+
+    if 'user_id' in session:
+        last_activity = session.get('last_activity')
+
+        if last_activity:
+            elapsed = now - datetime.strptime(last_activity, '%Y-%m-%d %H:%M:%S')
+            if elapsed > timedelta(minutes=15):
+                session.clear()
+                flash('세션이 만료되었습니다. 다시 로그인해주세요.')
+                return redirect(url_for('login'))
+
+        # 활동 시간 갱신
+        session['last_activity'] = now.strftime('%Y-%m-%d %H:%M:%S')
 
 # 데이터베이스 연결 관리: 요청마다 연결 생성 후 사용, 종료 시 close
 def get_db():
@@ -102,10 +158,11 @@ def init_db():
         cursor.execute("SELECT * FROM user WHERE username = 'admin'")
         if not cursor.fetchone():
             admin_id = str(uuid.uuid4())
+            hashed_admin_pw = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
             cursor.execute("""
                 INSERT INTO user (id, username, password, is_admin)
                 VALUES (?, ?, ?, 1)   
-            """, (admin_id, 'admin', 'admin123'))
+            """, (admin_id, 'admin', hashed_admin_pw))
             print("기본 관리자 계정이 생성되었습니다.")
       
     
@@ -121,12 +178,21 @@ def index():
         return redirect(url_for('dashboard'))
     return render_template('index.html')
 
-# 회원가입
+# 회원가입  시 비밀번호 암호화화
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        # 서버 측 입력 검증
+        if not is_valid_username(username):
+            flash('아이디는 3~20자의 영문자, 숫자, 밑줄만 가능합니다.')
+            return redirect(url_for('register'))
+
+        if not is_valid_password(password):
+            flash('비밀번호는 최소 8자 이상이며, 영문자/숫자/특수문자를 모두 포함해야 합니다.')
+            return redirect(url_for('register'))
+
         db = get_db()
         cursor = db.cursor()
         # 중복 사용자 체크
@@ -134,9 +200,12 @@ def register():
         if cursor.fetchone() is not None:
             flash('이미 존재하는 사용자명입니다.')
             return redirect(url_for('register'))
+
+        # 비밀번호 암호화
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         user_id = str(uuid.uuid4())
         cursor.execute("INSERT INTO user (id, username, password) VALUES (?, ?, ?)",
-                       (user_id, username, password))
+                       (user_id, username, hashed_password))
         db.commit()
         flash('회원가입이 완료되었습니다. 로그인 해주세요.')
         return redirect(url_for('login'))
@@ -150,10 +219,10 @@ def login():
         password = request.form['password']
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM user WHERE username = ? AND password = ?", (username, password))
+        cursor.execute("SELECT * FROM user WHERE username = ?", (username,))
         user = cursor.fetchone()
 
-        if user:
+         if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
             if user['is_blocked']:
                 flash('당신은 차단된 user입니다. 관리자에게 문의하세요.')
                 return redirect(url_for('login'))
@@ -206,8 +275,10 @@ def profile():
     db = get_db()
     cursor = db.cursor()
     if request.method == 'POST':
-        bio = request.form.get('bio', '')
-        cursor.execute("UPDATE user SET bio = ? WHERE id = ?", (bio, session['user_id']))
+        raw_bio = request.form.get('bio', '')
+        # XSS 공격 방지를 위한 HTML 이스케이프
+        safe_bio = html.escape(raw_bio)
+        cursor.execute("UPDATE user SET bio = ? WHERE id = ?", (safe_bio, session['user_id']))
         db.commit()
         flash('프로필이 업데이트되었습니다.')
         return redirect(url_for('profile'))
@@ -441,4 +512,4 @@ def admin_delete_user_products(user_id):
 
 if __name__ == '__main__':
     init_db()  # 앱 컨텍스트 내에서 테이블 생성
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True)  #debug = False로 설정하면 오류 정보가 사용자에게 노출되지 않는다. 지금은 개발 단계니까 True로 설정하겠다. 

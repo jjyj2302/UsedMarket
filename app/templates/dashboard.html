@@ -4,11 +4,10 @@
 <h2>대시보드</h2>
 
 <p>잔액: {{ user.balance }} 원</p>
-<p><a href="{{ url_for('charge') }}">💳 포인트 충전하기</a></p>
+<p><a href="{{ url_for('product.charge') }}">💳 포인트 충전하기</a></p>
 <hr>
 <!-- 검색 입력창을 넣는다!-->
-<form method="GET" action="{{ url_for('search') }}">
-  {{ csrf_token()}}
+<form method="GET" action="{{ url_for('product.search') }}">
   <input type="text" name="q" placeholder="찾는 상품 검색">
   <button type="submit">검색</button>
 </form>
@@ -21,7 +20,7 @@
 <ul>
   {% for product in products %}
   <li>
-    <a href="{{ url_for('view_product', product_id=product.id) }}">{{ product.title }}</a>
+    <a href="{{ url_for('product.view_product', product_id=product.id) }}">{{ product.title }}</a>
     - 가격: {{ product.price }}
   </li>
   {% endfor %}
@@ -30,7 +29,7 @@
 <p>검색 결과가 없습니다.</p>
 {% endif %}
 
-<p><a href="{{ url_for('new_product') }}">새 상품 등록</a></p>
+<p><a href="{{ url_for('product.new_product') }}">새 상품 등록</a></p>
 
 <h3>실시간 채팅</h3>
 <div id="chat">

@@ -106,13 +106,13 @@
 <body>
   <nav>
     {% if session.get('user_id') %}
-    <a href="{{ url_for('dashboard') }}">대시보드</a>
-    <a href="{{ url_for('profile') }}">프로필</a>
-    <a href="{{ url_for('report') }}">신고하기</a>
-    <a href="{{ url_for('logout') }}">로그아웃</a>
+    <a href="{{ url_for('main.dashboard') }}">대시보드</a>
+    <a href="{{ url_for('main.profile') }}">프로필</a>
+    <a href="{{ url_for('product.report') }}">신고하기</a>
+    <a href="{{ url_for('auth.logout') }}">로그아웃</a>
     {% else %}
-    <a href="{{ url_for('login') }}">로그인</a>
-    <a href="{{ url_for('register') }}">회원가입</a>
+    <a href="{{ url_for('auth.login') }}">로그인</a>
+    <a href="{{ url_for('auth.register') }}">회원가입</a>
     {% endif %}
   </nav>
   <div class="container">

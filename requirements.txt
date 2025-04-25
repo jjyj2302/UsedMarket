@@ -1,1 +1,7 @@
-python-dtoenv>=1.0.0
+flask
+flask-socketio
+flask-wtf
+bcrypt
+flask-session
+pythoon-dotenv
+werkzeung

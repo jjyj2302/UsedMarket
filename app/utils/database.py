@@ -113,6 +113,16 @@ def init_db():
             seller_id TEXT NOT NULL
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS activity_log (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+    """)
+
      # 컬럼 없을 경우 수동으로 추가 (실행해도 이미 있으면 무시됨)
     try:
         cursor.execute("ALTER TABLE user ADD COLUMN is_admin INTEGER DEFAULT 0")
@@ -129,14 +139,19 @@ def init_db():
 
 
     # 관리자 계정이 없으면 생성
-    cursor.execute("SELECT * FROM user WHERE username = 'admin'")
+    # .env에서 관리자 계정 정보 불러오기
+    admin_username = current_app.config['DEFAULT_ADMIN_USERNAME']
+    admin_password = current_app.config['DEFAULT_ADMIN_PASSWORD']
+
+    cursor.execute("SELECT * FROM user WHERE username = ?", (admin_username,))
     if not cursor.fetchone():
         admin_id = str(uuid.uuid4())
-        hashed_pw = bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt())
+        hashed_pw = bcrypt.hashpw(admin_password.encode('utf-8'), bcrypt.gensalt())
         cursor.execute("""
             INSERT INTO user (id, username, password, is_admin)
             VALUES (?, ?, ?, 1)
-        """, (admin_id, 'admin', hashed_pw))
-        print("기본 관리자 계정이 생성되었습니다.")
+        """, (admin_id, admin_username, hashed_pw))
+        print(f"[+] 기본 관리자 계정 '{admin_username}' 생성 완료.")
+
 
     db.commit()

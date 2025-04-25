@@ -1,10 +1,16 @@
 # app/routes/product.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 import uuid
+import re
 from app.utils.database import get_db
 from app.utils.decorators import login_required
 
 product_bp = Blueprint('product', __name__)
+
+def sanitize_search_input(keyword):
+    # 특수문자를 제거하고 공백을 처리
+    keyword = re.sub(r'[^\w\s가-힣]', '', keyword)
+    return keyword.strip()
 
 @product_bp.route('/product/new', methods=['GET', 'POST'])
 @login_required
@@ -143,6 +149,7 @@ def direct_transfer(seller_id, product_id):
 @login_required
 def search():
     keyword = request.args.get('q', '').strip()
+    keyword = sanitize_search_input(keyword)
 
     db = get_db()
     cursor = db.cursor()
@@ -150,7 +157,9 @@ def search():
     current_user = cursor.fetchone()
 
     if keyword:
-        cursor.execute("SELECT * FROM product WHERE title LIKE ?", (f"%{keyword}%",))
+        # 파라미터화된 쿼리 사용
+        cursor.execute("SELECT * FROM product WHERE title LIKE ? ESCAPE '\\'", 
+                      (f"%{keyword}%",))
         results = cursor.fetchall()
         flash(f"'{keyword}'에 대한 검색 결과입니다.")
     else:

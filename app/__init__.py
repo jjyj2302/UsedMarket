@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 from .utils.database import init_db
 from .utils.database import close_connection
 from .utils.decorators import register_error_handlers
-
+from config import Config
 from .routes.auth import auth_bp
 from .routes.main import main_bp
 from .routes.product import product_bp
@@ -20,7 +20,7 @@ def create_app():
     app = Flask(
         __name__,
         template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
-    app.config.from_object('config.Config')
+    app.config.from_object(Config)
 
     # 보안 설정
     csrf.init_app(app)
@@ -44,5 +44,11 @@ def create_app():
     # DB 초기화
     with app.app_context():
         init_db()
+
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'"
+        return response
 
     return app

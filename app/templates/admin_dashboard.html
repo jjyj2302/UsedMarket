@@ -19,7 +19,7 @@
         <td>{{ '✅ 차단됨' if user.is_blocked else '❎ 정상' }}</td>
         <td>
             {% if not user.is_blocked and not user.is_admin %}
-            <form method="POST" action="{{ url_for('admin.admin_block_user', user_id=user.id) }}">
+            <form method="POST" action="{{ url_for('superadmin9283.admin_block_user', user_id=user.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit">차단</button>
             </form>
@@ -65,12 +65,13 @@
         <td>{{ report.target_id }}</td>
         <td>{{ report.reason }}</td>
         <td>
-            <form method="POST" action="{{ url_for('admin.admin_block_user', user_id=report.target_id) }}"
+            <form method="POST" action="{{ url_for('superadmin9283.admin_block_user', user_id=report.target_id) }}"
                 style="display:inline;">
                 {{ csrf_token() }}
                 <button type="submit">차단</button>
             </form>
-            <form method="POST" action="{{ url_for('admin.admin_delete_user_products', user_id=report.target_id) }}"
+            <form method="POST"
+                action="{{ url_for('superadmin9283.admin_delete_user_products', user_id=report.target_id) }}"
                 style="display:inline;">
                 {{ csrf_token() }}
                 <button type="submit">상품 삭제</button>

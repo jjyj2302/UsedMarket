@@ -4,10 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}My Market{% endblock %}</title>
-  <!-- Socket.IO 클라이언트 라이브러리 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+  <!-- 공통 스타일 -->
   <style>
-    /* Notion 스타일 미니멀 디자인 */
     body {
       background-color: #F7F7F7;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -100,6 +99,23 @@
       margin-bottom: 10px;
       background-color: #fafafa;
     }
+
+    #messages li {
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    #chat_input {
+      width: 80%;
+      padding: 5px;
+      font-size: 14px;
+    }
+
+    #chat button {
+      padding: 6px 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -115,6 +131,7 @@
     <a href="{{ url_for('auth.register') }}">회원가입</a>
     {% endif %}
   </nav>
+
   <div class="container">
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -125,8 +142,13 @@
     </ul>
     {% endif %}
     {% endwith %}
+
     {% block content %}{% endblock %}
   </div>
+
+  <!-- ✅ Socket.IO 클라이언트 스크립트 -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 
 </html>

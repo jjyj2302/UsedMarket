@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block title %}대시보드{% endblock %}
+
 {% block content %}
 <h2>대시보드</h2>
 
 <p>잔액: {{ user.balance }} 원</p>
 <p><a href="{{ url_for('product.charge') }}">💳 포인트 충전하기</a></p>
 <hr>
-<!-- 검색 입력창을 넣는다!-->
+
 <form method="GET" action="{{ url_for('product.search') }}">
   <input type="text" name="q" placeholder="찾는 상품 검색">
   <button type="submit">검색</button>
@@ -15,7 +16,6 @@
 
 <h3>등록된 상품</h3>
 
-<!-- ✅ 검색 결과 여부 조건 추가 -->
 {% if products %}
 <ul>
   {% for product in products %}
@@ -37,24 +37,66 @@
   <input id="chat_input" type="text" placeholder="메시지를 입력하세요">
   <button onclick="sendMessage()">전송</button>
 </div>
+{% endblock %}
 
-<script type="text/javascript">
+{% block scripts %}
+<style>
+  #chat {
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 20px;
+  }
+
+  #messages {
+    list-style-type: none;
+    padding: 0;
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+  }
+
+  #messages li {
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+
+  #chat_input {
+    width: 80%;
+    padding: 5px;
+    font-size: 14px;
+  }
+
+  #chat button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+</style>
+
+<script>
   var socket = io();
   socket.on('connect', function () {
     console.log("채팅 서버에 연결됨");
   });
   socket.on('message', function (data) {
-    var messages = document.getElementById('messages');
-    var item = document.createElement('li');
+    const messages = document.getElementById('messages');
+    const item = document.createElement('li');
     item.textContent = data.username + ": " + data.message;
     messages.appendChild(item);
     window.scrollTo(0, document.body.scrollHeight);
   });
+
   function sendMessage() {
-    var input = document.getElementById('chat_input');
-    var message = input.value;
-    if (message) {
-      socket.emit('send_message', { 'username': "{{ user.username }}", 'message': message });
+    const input = document.getElementById('chat_input');
+    const message = input.value;
+    if (message.trim()) {
+      socket.emit('send_message', {
+        username: "{{ user.username }}",
+        message: message
+      });
       input.value = "";
     }
   }
